@@ -6,10 +6,9 @@ import plotly.express as px
 import plotly.graph_objects as go
 from io import BytesIO
 
-# Configuração da página
+# Configuração da página - REMOVENDO o parâmetro page_sidebar_initial_state
 st.set_page_config(
     page_title="Sistema de Gestão de Estoque e Movimentações",
-    page_sidebar_initial_state="expanded",
     layout="wide"
 )
 
