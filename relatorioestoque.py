@@ -67,7 +67,7 @@ if uploaded_estoque is not None and uploaded_movimentacao is not None:
         # ==================== PAINEL 1: MOVIMENTAÇÕES ====================
         st.header("📦 Relatório de Movimentações por Ordem de Serviço")
         
-        # Filtros interativos
+        # Filtros interativos - TODOS PRESELECIONADOS
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
@@ -75,7 +75,7 @@ if uploaded_estoque is not None and uploaded_movimentacao is not None:
             pop_filter = st.multiselect(
                 "POP",
                 options=pop_options,
-                default=pop_options if len(pop_options) <= 10 else pop_options[:10],
+                default=pop_options,  # PRESELECIONADO TODOS
                 key="pop_filter_main"
             )
         
@@ -84,7 +84,7 @@ if uploaded_estoque is not None and uploaded_movimentacao is not None:
             tipo_os_filter = st.multiselect(
                 "Tipo de OS",
                 options=tipo_os_options,
-                default=tipo_os_options,
+                default=tipo_os_options,  # PRESELECIONADO TODOS
                 key="tipo_os_filter_main"
             )
         
@@ -93,7 +93,7 @@ if uploaded_estoque is not None and uploaded_movimentacao is not None:
             tecnico_filter = st.multiselect(
                 "Técnico",
                 options=tecnico_options,
-                default=tecnico_options if len(tecnico_options) <= 10 else tecnico_options[:10],
+                default=tecnico_options,  # PRESELECIONADO TODOS
                 key="tecnico_filter_main"
             )
         
@@ -103,7 +103,7 @@ if uploaded_estoque is not None and uploaded_movimentacao is not None:
                 max_date = df_movimentacao['Data_OS'].max().date()
                 data_range = st.date_input(
                     "Período",
-                    value=(min_date, max_date),
+                    value=(min_date, max_date),  # PRESELECIONADO TODO PERÍODO
                     key="data_range_main"
                 )
         
@@ -162,12 +162,12 @@ if uploaded_estoque is not None and uploaded_movimentacao is not None:
             # Visão por produto
             st.write("**Análise por Produto**")
             
-            # Filtro de produto para esta aba
+            # Filtro de produto para esta aba - PRESELECIONADO TODOS
             produto_options = sorted(df_mov_filtered['Produto'].dropna().unique())
             produto_filter_tab = st.multiselect(
                 "Selecione os produtos para análise",
                 options=produto_options,
-                default=produto_options[:10] if len(produto_options) > 10 else produto_options,
+                default=produto_options,  # PRESELECIONADO TODOS
                 key="produto_filter_tab"
             )
             
@@ -206,12 +206,12 @@ if uploaded_estoque is not None and uploaded_movimentacao is not None:
             # Visão por técnico
             st.write("**Análise por Técnico**")
             
-            # Filtro de técnico para esta aba
+            # Filtro de técnico para esta aba - PRESELECIONADO TODOS
             tecnico_options_tab = sorted(df_mov_filtered['Tecnico_Fechamento'].dropna().unique())
             tecnico_filter_tab = st.multiselect(
                 "Selecione os técnicos para análise",
                 options=tecnico_options_tab,
-                default=tecnico_options_tab[:10] if len(tecnico_options_tab) > 10 else tecnico_options_tab,
+                default=tecnico_options_tab,  # PRESELECIONADO TODOS
                 key="tecnico_filter_tab"
             )
             
@@ -250,12 +250,12 @@ if uploaded_estoque is not None and uploaded_movimentacao is not None:
             # Visão por POP
             st.write("**Análise por POP**")
             
-            # Filtro de POP para esta aba
+            # Filtro de POP para esta aba - PRESELECIONADO TODOS
             pop_options_tab = sorted(df_mov_filtered['POP'].dropna().unique())
             pop_filter_tab = st.multiselect(
                 "Selecione os POPs para análise",
                 options=pop_options_tab,
-                default=pop_options_tab[:10] if len(pop_options_tab) > 10 else pop_options_tab,
+                default=pop_options_tab,  # PRESELECIONADO TODOS
                 key="pop_filter_tab"
             )
             
@@ -337,16 +337,16 @@ if uploaded_estoque is not None and uploaded_movimentacao is not None:
         # ==================== TABELA DE MOVIMENTAÇÕES AGRUPADAS ====================
         st.subheader("📋 Movimentações Agrupadas por POP, Tipo OS e Técnico")
         
-        # Filtros específicos para movimentações agrupadas com ênfase no produto
+        # Filtros específicos para movimentações agrupadas com ênfase no produto - TODOS PRESELECIONADOS
         col_f1, col_f2, col_f3, col_f4 = st.columns(4)
         
         with col_f1:
-            # Filtro de produto com destaque
+            # Filtro de produto com destaque - PRESELECIONADO TODOS
             produto_agrupado_options = sorted(df_mov_filtered['Produto'].dropna().unique())
             produto_agrupado_filter = st.multiselect(
                 "🔍 **Foco: Produto**",
                 options=produto_agrupado_options,
-                default=[],
+                default=produto_agrupado_options,  # PRESELECIONADO TODOS
                 help="Selecione os produtos para filtrar as movimentações",
                 key="produto_agrupado_filter"
             )
@@ -356,7 +356,7 @@ if uploaded_estoque is not None and uploaded_movimentacao is not None:
             pop_agrupado_filter = st.multiselect(
                 "POP",
                 options=pop_agrupado_options,
-                default=pop_agrupado_options[:5] if len(pop_agrupado_options) > 5 else pop_agrupado_options,
+                default=pop_agrupado_options,  # PRESELECIONADO TODOS
                 key="pop_agrupado_filter"
             )
         
@@ -365,7 +365,7 @@ if uploaded_estoque is not None and uploaded_movimentacao is not None:
             tipo_os_agrupado_filter = st.multiselect(
                 "Tipo de OS",
                 options=tipo_os_agrupado_options,
-                default=tipo_os_agrupado_options,
+                default=tipo_os_agrupado_options,  # PRESELECIONADO TODOS
                 key="tipo_os_agrupado_filter"
             )
         
@@ -374,7 +374,7 @@ if uploaded_estoque is not None and uploaded_movimentacao is not None:
             tecnico_agrupado_filter = st.multiselect(
                 "Técnico",
                 options=tecnico_agrupado_options,
-                default=tecnico_agrupado_options[:5] if len(tecnico_agrupado_options) > 5 else tecnico_agrupado_options,
+                default=tecnico_agrupado_options,  # PRESELECIONADO TODOS
                 key="tecnico_agrupado_filter"
             )
         
@@ -415,15 +415,12 @@ if uploaded_estoque is not None and uploaded_movimentacao is not None:
             
             with col_g1:
                 # Gráfico de barras - Produtos selecionados
-                if produto_agrupado_filter:
-                    titulo = f'Distribuição por Produto'
-                else:
+                if len(produto_agrupado_filter) <= 1:
                     titulo = 'Top 10 Produtos por Quantidade'
-                
-                if produto_agrupado_filter:
-                    df_prod_agrupado = df_grouped.groupby('Produto')['Quantidade'].sum().reset_index()
-                else:
                     df_prod_agrupado = df_grouped.groupby('Produto')['Quantidade'].sum().nlargest(10).reset_index()
+                else:
+                    titulo = f'Distribuição por Produto'
+                    df_prod_agrupado = df_grouped.groupby('Produto')['Quantidade'].sum().reset_index()
                 
                 fig_g1 = px.bar(
                     df_prod_agrupado,
@@ -522,7 +519,7 @@ if uploaded_estoque is not None and uploaded_movimentacao is not None:
             df_previsao['Media_45_dias'] = df_previsao['Media_45_dias'].round(2)
             df_previsao['Quantidade_Necessaria'] = df_previsao['Quantidade_Necessaria'].round(0)
             
-            # Filtros adicionais para previsão
+            # Filtros adicionais para previsão - PRESELECIONADO TODOS
             st.subheader("🔍 Filtros para Análise de Ressuprimento")
             
             col_filter1, col_filter2 = st.columns(2)
@@ -532,7 +529,7 @@ if uploaded_estoque is not None and uploaded_movimentacao is not None:
                 tecnico_previsao_filter = st.multiselect(
                     "Técnico (Previsão)",
                     options=tecnicos_previsao,
-                    default=tecnicos_previsao,
+                    default=tecnicos_previsao,  # PRESELECIONADO TODOS
                     key="tecnico_previsao_filter"
                 )
             
@@ -541,7 +538,7 @@ if uploaded_estoque is not None and uploaded_movimentacao is not None:
                 situacao_filter = st.multiselect(
                     "Situação",
                     options=situacao_options,
-                    default=['Todos'],
+                    default=['Todos'],  # PRESELECIONADO TODOS
                     key="situacao_filter"
                 )
             
@@ -718,8 +715,8 @@ else:
     
     - **Relatório Completo:** Visualize todas as movimentações com abas por visão geral, produto, técnico e POP
     - **Soma por Produto:** Visualize a quantidade total movimentada por produto com filtros interativos
-    - **Filtros Dinâmicos:** Filtre por POP, Tipo de OS, Técnico e período
-    - **Movimentações Agrupadas:** Foco principal no produto, com filtros complementares
+    - **Filtros Dinâmicos:** Filtre por POP, Tipo de OS, Técnico e período (todos preselecionados)
+    - **Movimentações Agrupadas:** Foco principal no produto, com filtros complementares (todos preselecionados)
     - **Tabela Dinâmica:** Visualize a relação Produtos vs Técnicos
     - **Previsão de Ressuprimento:** Análise automática baseada nos técnicos filtrados, considerando os últimos 90 dias
     - **Exportação de Dados:** Exporte todas as análises para Excel
