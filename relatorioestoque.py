@@ -75,7 +75,7 @@ if uploaded_estoque is not None and uploaded_movimentacao is not None:
             pop_filter = st.multiselect(
                 "POP",
                 options=pop_options,
-                default=pop_options,  # PRESELECIONADO TODOS
+                default=pop_options,
                 key="pop_filter_main"
             )
         
@@ -84,7 +84,7 @@ if uploaded_estoque is not None and uploaded_movimentacao is not None:
             tipo_os_filter = st.multiselect(
                 "Tipo de OS",
                 options=tipo_os_options,
-                default=tipo_os_options,  # PRESELECIONADO TODOS
+                default=tipo_os_options,
                 key="tipo_os_filter_main"
             )
         
@@ -93,7 +93,7 @@ if uploaded_estoque is not None and uploaded_movimentacao is not None:
             tecnico_filter = st.multiselect(
                 "Técnico",
                 options=tecnico_options,
-                default=tecnico_options,  # PRESELECIONADO TODOS
+                default=tecnico_options,
                 key="tecnico_filter_main"
             )
         
@@ -103,7 +103,7 @@ if uploaded_estoque is not None and uploaded_movimentacao is not None:
                 max_date = df_movimentacao['Data_OS'].max().date()
                 data_range = st.date_input(
                     "Período",
-                    value=(min_date, max_date),  # PRESELECIONADO TODO PERÍODO
+                    value=(min_date, max_date),
                     key="data_range_main"
                 )
         
@@ -167,7 +167,7 @@ if uploaded_estoque is not None and uploaded_movimentacao is not None:
             produto_filter_tab = st.multiselect(
                 "Selecione os produtos para análise",
                 options=produto_options,
-                default=produto_options,  # PRESELECIONADO TODOS
+                default=produto_options,
                 key="produto_filter_tab"
             )
             
@@ -211,7 +211,7 @@ if uploaded_estoque is not None and uploaded_movimentacao is not None:
             tecnico_filter_tab = st.multiselect(
                 "Selecione os técnicos para análise",
                 options=tecnico_options_tab,
-                default=tecnico_options_tab,  # PRESELECIONADO TODOS
+                default=tecnico_options_tab,
                 key="tecnico_filter_tab"
             )
             
@@ -255,7 +255,7 @@ if uploaded_estoque is not None and uploaded_movimentacao is not None:
             pop_filter_tab = st.multiselect(
                 "Selecione os POPs para análise",
                 options=pop_options_tab,
-                default=pop_options_tab,  # PRESELECIONADO TODOS
+                default=pop_options_tab,
                 key="pop_filter_tab"
             )
             
@@ -346,7 +346,7 @@ if uploaded_estoque is not None and uploaded_movimentacao is not None:
             produto_agrupado_filter = st.multiselect(
                 "🔍 **Foco: Produto**",
                 options=produto_agrupado_options,
-                default=produto_agrupado_options,  # PRESELECIONADO TODOS
+                default=produto_agrupado_options,
                 help="Selecione os produtos para filtrar as movimentações",
                 key="produto_agrupado_filter"
             )
@@ -356,7 +356,7 @@ if uploaded_estoque is not None and uploaded_movimentacao is not None:
             pop_agrupado_filter = st.multiselect(
                 "POP",
                 options=pop_agrupado_options,
-                default=pop_agrupado_options,  # PRESELECIONADO TODOS
+                default=pop_agrupado_options,
                 key="pop_agrupado_filter"
             )
         
@@ -365,7 +365,7 @@ if uploaded_estoque is not None and uploaded_movimentacao is not None:
             tipo_os_agrupado_filter = st.multiselect(
                 "Tipo de OS",
                 options=tipo_os_agrupado_options,
-                default=tipo_os_agrupado_options,  # PRESELECIONADO TODOS
+                default=tipo_os_agrupado_options,
                 key="tipo_os_agrupado_filter"
             )
         
@@ -374,7 +374,7 @@ if uploaded_estoque is not None and uploaded_movimentacao is not None:
             tecnico_agrupado_filter = st.multiselect(
                 "Técnico",
                 options=tecnico_agrupado_options,
-                default=tecnico_agrupado_options,  # PRESELECIONADO TODOS
+                default=tecnico_agrupado_options,
                 key="tecnico_agrupado_filter"
             )
         
@@ -444,24 +444,67 @@ if uploaded_estoque is not None and uploaded_movimentacao is not None:
                     )
                     st.plotly_chart(fig_g2, use_container_width=True)
             
-            # Tabela dinâmica com pivot
-            st.subheader("📊 Tabela Dinâmica - Produtos vs Técnicos")
+            # ==================== TABELAS DINÂMICAS ====================
+            st.subheader("📊 Tabelas Dinâmicas")
             
-            # Criar tabela pivot
-            pivot_table = pd.pivot_table(
-                df_grouped,
-                values='Quantidade',
-                index='Produto',
-                columns='Tecnico_Fechamento',
-                aggfunc='sum',
-                fill_value=0
-            )
+            # Criar abas para as tabelas dinâmicas
+            tab_pivot1, tab_pivot2 = st.tabs(["📊 Produtos vs Técnicos", "📊 Produtos vs POP"])
             
-            # Limitar para visualização (mostrar apenas produtos com maior movimentação)
-            top_produtos_pivot = df_grouped.groupby('Produto')['Quantidade'].sum().nlargest(20).index
-            pivot_display = pivot_table.loc[pivot_table.index.isin(top_produtos_pivot)]
+            with tab_pivot1:
+                st.write("**Matriz: Produtos vs Técnicos**")
+                # Criar tabela pivot - Produtos vs Técnicos
+                pivot_tecnicos = pd.pivot_table(
+                    df_grouped,
+                    values='Quantidade',
+                    index='Produto',
+                    columns='Tecnico_Fechamento',
+                    aggfunc='sum',
+                    fill_value=0
+                )
+                
+                # Limitar para visualização (mostrar apenas produtos com maior movimentação)
+                top_produtos_pivot = df_grouped.groupby('Produto')['Quantidade'].sum().nlargest(20).index
+                pivot_tecnicos_display = pivot_tecnicos.loc[pivot_tecnicos.index.isin(top_produtos_pivot)]
+                
+                st.dataframe(pivot_tecnicos_display, use_container_width=True)
+                
+                # Adicionar resumo da matriz
+                col_res1, col_res2, col_res3 = st.columns(3)
+                with col_res1:
+                    st.metric("Total de Produtos", len(pivot_tecnicos_display))
+                with col_res2:
+                    st.metric("Total de Técnicos", len(pivot_tecnicos_display.columns))
+                with col_res3:
+                    total_quantidade_pivot = pivot_tecnicos_display.sum().sum()
+                    st.metric("Quantidade Total", f"{total_quantidade_pivot:,.0f}")
             
-            st.dataframe(pivot_display, use_container_width=True)
+            with tab_pivot2:
+                st.write("**Matriz: Produtos vs POP**")
+                # Criar tabela pivot - Produtos vs POP
+                pivot_pop = pd.pivot_table(
+                    df_grouped,
+                    values='Quantidade',
+                    index='Produto',
+                    columns='POP',
+                    aggfunc='sum',
+                    fill_value=0
+                )
+                
+                # Limitar para visualização (mostrar apenas produtos com maior movimentação)
+                top_produtos_pivot_pop = df_grouped.groupby('Produto')['Quantidade'].sum().nlargest(20).index
+                pivot_pop_display = pivot_pop.loc[pivot_pop.index.isin(top_produtos_pivot_pop)]
+                
+                st.dataframe(pivot_pop_display, use_container_width=True)
+                
+                # Adicionar resumo da matriz
+                col_res1, col_res2, col_res3 = st.columns(3)
+                with col_res1:
+                    st.metric("Total de Produtos", len(pivot_pop_display))
+                with col_res2:
+                    st.metric("Total de POPs", len(pivot_pop_display.columns))
+                with col_res3:
+                    total_quantidade_pivot_pop = pivot_pop_display.sum().sum()
+                    st.metric("Quantidade Total", f"{total_quantidade_pivot_pop:,.0f}")
             
         else:
             st.warning("Nenhum dado encontrado com os filtros selecionados para as movimentações agrupadas.")
@@ -529,7 +572,7 @@ if uploaded_estoque is not None and uploaded_movimentacao is not None:
                 tecnico_previsao_filter = st.multiselect(
                     "Técnico (Previsão)",
                     options=tecnicos_previsao,
-                    default=tecnicos_previsao,  # PRESELECIONADO TODOS
+                    default=tecnicos_previsao,
                     key="tecnico_previsao_filter"
                 )
             
@@ -538,7 +581,7 @@ if uploaded_estoque is not None and uploaded_movimentacao is not None:
                 situacao_filter = st.multiselect(
                     "Situação",
                     options=situacao_options,
-                    default=['Todos'],  # PRESELECIONADO TODOS
+                    default=['Todos'],
                     key="situacao_filter"
                 )
             
@@ -717,7 +760,7 @@ else:
     - **Soma por Produto:** Visualize a quantidade total movimentada por produto com filtros interativos
     - **Filtros Dinâmicos:** Filtre por POP, Tipo de OS, Técnico e período (todos preselecionados)
     - **Movimentações Agrupadas:** Foco principal no produto, com filtros complementares (todos preselecionados)
-    - **Tabela Dinâmica:** Visualize a relação Produtos vs Técnicos
+    - **Tabelas Dinâmicas:** Visualize a relação Produtos vs Técnicos e Produtos vs POP
     - **Previsão de Ressuprimento:** Análise automática baseada nos técnicos filtrados, considerando os últimos 90 dias
     - **Exportação de Dados:** Exporte todas as análises para Excel
     """)
