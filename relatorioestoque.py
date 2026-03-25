@@ -452,7 +452,9 @@ if uploaded_estoque is not None and uploaded_movimentacao is not None:
             
             with tab_pivot1:
                 st.write("**Matriz: Produtos vs Técnicos**")
-                # Criar tabela pivot - Produtos vs Técnicos
+                st.info(f"📌 Total de produtos: {df_grouped['Produto'].nunique()} | Total de técnicos: {df_grouped['Tecnico_Fechamento'].nunique()}")
+                
+                # Criar tabela pivot - Produtos vs Técnicos (TODOS OS PRODUTOS)
                 pivot_tecnicos = pd.pivot_table(
                     df_grouped,
                     values='Quantidade',
@@ -462,25 +464,28 @@ if uploaded_estoque is not None and uploaded_movimentacao is not None:
                     fill_value=0
                 )
                 
-                # Limitar para visualização (mostrar apenas produtos com maior movimentação)
-                top_produtos_pivot = df_grouped.groupby('Produto')['Quantidade'].sum().nlargest(20).index
-                pivot_tecnicos_display = pivot_tecnicos.loc[pivot_tecnicos.index.isin(top_produtos_pivot)]
+                # Ordenar produtos por quantidade total (decrescente)
+                produto_total = df_grouped.groupby('Produto')['Quantidade'].sum()
+                pivot_tecnicos = pivot_tecnicos.reindex(produto_total.sort_values(ascending=False).index)
                 
-                st.dataframe(pivot_tecnicos_display, use_container_width=True)
+                # Exibir tabela completa
+                st.dataframe(pivot_tecnicos, use_container_width=True)
                 
                 # Adicionar resumo da matriz
                 col_res1, col_res2, col_res3 = st.columns(3)
                 with col_res1:
-                    st.metric("Total de Produtos", len(pivot_tecnicos_display))
+                    st.metric("Total de Produtos", len(pivot_tecnicos))
                 with col_res2:
-                    st.metric("Total de Técnicos", len(pivot_tecnicos_display.columns))
+                    st.metric("Total de Técnicos", len(pivot_tecnicos.columns))
                 with col_res3:
-                    total_quantidade_pivot = pivot_tecnicos_display.sum().sum()
+                    total_quantidade_pivot = pivot_tecnicos.sum().sum()
                     st.metric("Quantidade Total", f"{total_quantidade_pivot:,.0f}")
             
             with tab_pivot2:
                 st.write("**Matriz: Produtos vs POP**")
-                # Criar tabela pivot - Produtos vs POP
+                st.info(f"📌 Total de produtos: {df_grouped['Produto'].nunique()} | Total de POPs: {df_grouped['POP'].nunique()}")
+                
+                # Criar tabela pivot - Produtos vs POP (TODOS OS PRODUTOS)
                 pivot_pop = pd.pivot_table(
                     df_grouped,
                     values='Quantidade',
@@ -490,20 +495,21 @@ if uploaded_estoque is not None and uploaded_movimentacao is not None:
                     fill_value=0
                 )
                 
-                # Limitar para visualização (mostrar apenas produtos com maior movimentação)
-                top_produtos_pivot_pop = df_grouped.groupby('Produto')['Quantidade'].sum().nlargest(20).index
-                pivot_pop_display = pivot_pop.loc[pivot_pop.index.isin(top_produtos_pivot_pop)]
+                # Ordenar produtos por quantidade total (decrescente)
+                produto_total_pop = df_grouped.groupby('Produto')['Quantidade'].sum()
+                pivot_pop = pivot_pop.reindex(produto_total_pop.sort_values(ascending=False).index)
                 
-                st.dataframe(pivot_pop_display, use_container_width=True)
+                # Exibir tabela completa
+                st.dataframe(pivot_pop, use_container_width=True)
                 
                 # Adicionar resumo da matriz
                 col_res1, col_res2, col_res3 = st.columns(3)
                 with col_res1:
-                    st.metric("Total de Produtos", len(pivot_pop_display))
+                    st.metric("Total de Produtos", len(pivot_pop))
                 with col_res2:
-                    st.metric("Total de POPs", len(pivot_pop_display.columns))
+                    st.metric("Total de POPs", len(pivot_pop.columns))
                 with col_res3:
-                    total_quantidade_pivot_pop = pivot_pop_display.sum().sum()
+                    total_quantidade_pivot_pop = pivot_pop.sum().sum()
                     st.metric("Quantidade Total", f"{total_quantidade_pivot_pop:,.0f}")
             
         else:
@@ -760,7 +766,7 @@ else:
     - **Soma por Produto:** Visualize a quantidade total movimentada por produto com filtros interativos
     - **Filtros Dinâmicos:** Filtre por POP, Tipo de OS, Técnico e período (todos preselecionados)
     - **Movimentações Agrupadas:** Foco principal no produto, com filtros complementares (todos preselecionados)
-    - **Tabelas Dinâmicas:** Visualize a relação Produtos vs Técnicos e Produtos vs POP
+    - **Tabelas Dinâmicas:** Visualize TODOS os produtos vs Técnicos e TODOS os produtos vs POP (sem limitação)
     - **Previsão de Ressuprimento:** Análise automática baseada nos técnicos filtrados, considerando os últimos 90 dias
     - **Exportação de Dados:** Exporte todas as análises para Excel
     """)
