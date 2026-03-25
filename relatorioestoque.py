@@ -12,12 +12,6 @@ st.set_page_config(
     layout="wide"
 )
 
-# Configurar pandas para mostrar todas as colunas
-pd.set_option('display.max_columns', None)
-pd.set_option('display.max_rows', None)
-pd.set_option('display.width', None)
-pd.set_option('display.max_colwidth', None)
-
 st.title("📊 Sistema de Gestão de Estoque e Movimentações")
 st.markdown("---")
 
@@ -267,85 +261,65 @@ if uploaded_estoque is not None and uploaded_movimentacao is not None:
             with tab_pivot1:
                 st.write("**Matriz: Produtos vs Técnicos**")
                 
-                # Criar pivot completa
-                pivot_tecnicos = pd.pivot_table(
-                    df_grouped,
-                    values='Quantidade',
-                    index='Produto',
-                    columns='Tecnico_Fechamento',
-                    aggfunc='sum',
-                    fill_value=0
-                )
+                # Transformar os dados agrupados em formato de tabela dinâmica
+                # Vamos criar uma lista de dicionários para reconstruir como dataframe
+                pivot_data = []
+                for produto in df_grouped['Produto'].unique():
+                    row = {'Produto': produto}
+                    for tecnico in df_grouped['Tecnico_Fechamento'].unique():
+                        valor = df_grouped[(df_grouped['Produto'] == produto) & (df_grouped['Tecnico_Fechamento'] == tecnico)]['Quantidade'].sum()
+                        row[tecnico] = valor if valor > 0 else 0
+                    pivot_data.append(row)
+                
+                df_pivot_tecnicos = pd.DataFrame(pivot_data)
+                df_pivot_tecnicos = df_pivot_tecnicos.set_index('Produto')
                 
                 # Ordenar por quantidade total
-                produto_total = df_grouped.groupby('Produto')['Quantidade'].sum()
-                pivot_tecnicos = pivot_tecnicos.reindex(produto_total.sort_values(ascending=False).index)
+                df_pivot_tecnicos['Total'] = df_pivot_tecnicos.sum(axis=1)
+                df_pivot_tecnicos = df_pivot_tecnicos.sort_values('Total', ascending=False)
+                df_pivot_tecnicos = df_pivot_tecnicos.drop('Total', axis=1)
                 
-                # Exibir todas as colunas sem limitação usando HTML customizado
-                st.markdown("""
-                <style>
-                .dataframe-container {
-                    overflow-x: auto;
-                    max-width: 100%;
-                }
-                .dataframe {
-                    width: 100%;
-                    border-collapse: collapse;
-                }
-                .dataframe th, .dataframe td {
-                    padding: 8px;
-                    text-align: left;
-                    border: 1px solid #ddd;
-                    white-space: nowrap;
-                }
-                .dataframe th {
-                    background-color: #f2f2f2;
-                    position: sticky;
-                    top: 0;
-                }
-                </style>
-                """, unsafe_allow_html=True)
-                
-                # Converter para HTML com scroll horizontal
-                html_table = pivot_tecnicos.to_html(classes='dataframe', max_cols=None)
-                st.markdown(f'<div class="dataframe-container">{html_table}</div>', unsafe_allow_html=True)
+                # Exibir usando st.dataframe que funciona sem limitação
+                st.dataframe(df_pivot_tecnicos, use_container_width=True, height=500)
                 
                 col_r1, col_r2, col_r3 = st.columns(3)
                 with col_r1:
-                    st.metric("Total de Produtos", len(pivot_tecnicos))
+                    st.metric("Total de Produtos", len(df_pivot_tecnicos))
                 with col_r2:
-                    st.metric("Total de Técnicos", len(pivot_tecnicos.columns))
+                    st.metric("Total de Técnicos", len(df_pivot_tecnicos.columns))
                 with col_r3:
-                    st.metric("Quantidade Total", f"{pivot_tecnicos.sum().sum():,.0f}")
+                    st.metric("Quantidade Total", f"{df_pivot_tecnicos.sum().sum():,.0f}")
             
             with tab_pivot2:
                 st.write("**Matriz: Produtos vs POP**")
                 
-                # Criar pivot completa
-                pivot_pop = pd.pivot_table(
-                    df_grouped,
-                    values='Quantidade',
-                    index='Produto',
-                    columns='POP',
-                    aggfunc='sum',
-                    fill_value=0
-                )
+                # Transformar os dados agrupados em formato de tabela dinâmica para POP
+                pivot_data_pop = []
+                for produto in df_grouped['Produto'].unique():
+                    row = {'Produto': produto}
+                    for pop in df_grouped['POP'].unique():
+                        valor = df_grouped[(df_grouped['Produto'] == produto) & (df_grouped['POP'] == pop)]['Quantidade'].sum()
+                        row[pop] = valor if valor > 0 else 0
+                    pivot_data_pop.append(row)
+                
+                df_pivot_pop = pd.DataFrame(pivot_data_pop)
+                df_pivot_pop = df_pivot_pop.set_index('Produto')
                 
                 # Ordenar por quantidade total
-                produto_total_pop = df_grouped.groupby('Produto')['Quantidade'].sum()
-                pivot_pop = pivot_pop.reindex(produto_total_pop.sort_values(ascending=False).index)
+                df_pivot_pop['Total'] = df_pivot_pop.sum(axis=1)
+                df_pivot_pop = df_pivot_pop.sort_values('Total', ascending=False)
+                df_pivot_pop = df_pivot_pop.drop('Total', axis=1)
                 
-                # Exibir todas as colunas sem limitação usando HTML customizado
-                html_table_pop = pivot_pop.to_html(classes='dataframe', max_cols=None)
-                st.markdown(f'<div class="dataframe-container">{html_table_pop}</div>', unsafe_allow_html=True)
+                # Exibir usando st.dataframe que funciona sem limitação
+                st.dataframe(df_pivot_pop, use_container_width=True, height=500)
                 
                 col_r1, col_r2, col_r3 = st.columns(3)
                 with col_r1:
-                    st.metric("Total de Produtos", len(pivot_pop))
+                    st.metric("Total de Produtos", len(df_pivot_pop))
                 with col_r2:
-                    st.metric("Total de POPs", len(pivot_pop.columns))
+                    st.metric("Total de POPs", len(df_pivot_pop.columns))
                 with col_r3:
-                    st.metric("Quantidade Total", f"{pivot_pop.sum().sum():,.0f}")
+                    st.metric("Quantidade Total", f"{df_pivot_pop.sum().sum():,.0f}")
         
         else:
             st.warning("Nenhum dado encontrado com os filtros selecionados.")
@@ -458,7 +432,7 @@ else:
     - **Relatório Completo:** Visualize todas as movimentações com abas por visão geral, produto, técnico e POP
     - **Soma por Produto:** Quantidade total movimentada por produto
     - **Filtros Dinâmicos:** Filtre por POP, Tipo de OS, Técnico e período (todos preselecionados)
-    - **Tabelas Dinâmicas:** Visualize todas as colunas sem limitação usando HTML com scroll horizontal
+    - **Tabelas Dinâmicas:** Visualize Produtos vs Técnicos e Produtos vs POP no mesmo formato das movimentações agrupadas
     - **Previsão de Ressuprimento:** Análise baseada nos últimos 90 dias
     - **Exportação de Dados:** Exporte todas as análises para Excel
     """)
