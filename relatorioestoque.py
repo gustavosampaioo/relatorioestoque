@@ -15,6 +15,11 @@ st.set_page_config(
 st.title("📊 Sistema de Gestão de Estoque e Movimentações")
 st.markdown("---")
 
+# Configurar pandas para mostrar todas as colunas
+pd.set_option('display.max_columns', None)
+pd.set_option('display.max_rows', None)
+pd.set_option('display.width', None)
+
 # ==================== CARREGAMENTO DOS ARQUIVOS ====================
 st.sidebar.header("📂 Upload dos Arquivos")
 
@@ -468,8 +473,16 @@ if uploaded_estoque is not None and uploaded_movimentacao is not None:
                 produto_total = df_grouped.groupby('Produto')['Quantidade'].sum()
                 pivot_tecnicos = pivot_tecnicos.reindex(produto_total.sort_values(ascending=False).index)
                 
-                # Exibir tabela completa
-                st.dataframe(pivot_tecnicos, use_container_width=True)
+                # Configurar opções de exibição para mostrar todas as colunas
+                with st.expander("⚙️ Opções de Exibição", expanded=False):
+                    height_pivot = st.slider("Altura da tabela (px)", 400, 800, 600, key="height_tecnicos")
+                
+                # Exibir tabela completa com scroll horizontal
+                st.dataframe(
+                    pivot_tecnicos,
+                    use_container_width=True,
+                    height=height_pivot
+                )
                 
                 # Adicionar resumo da matriz
                 col_res1, col_res2, col_res3 = st.columns(3)
@@ -499,8 +512,16 @@ if uploaded_estoque is not None and uploaded_movimentacao is not None:
                 produto_total_pop = df_grouped.groupby('Produto')['Quantidade'].sum()
                 pivot_pop = pivot_pop.reindex(produto_total_pop.sort_values(ascending=False).index)
                 
-                # Exibir tabela completa
-                st.dataframe(pivot_pop, use_container_width=True)
+                # Configurar opções de exibição
+                with st.expander("⚙️ Opções de Exibição", expanded=False):
+                    height_pivot_pop = st.slider("Altura da tabela (px)", 400, 800, 600, key="height_pop")
+                
+                # Exibir tabela completa com scroll horizontal
+                st.dataframe(
+                    pivot_pop,
+                    use_container_width=True,
+                    height=height_pivot_pop
+                )
                 
                 # Adicionar resumo da matriz
                 col_res1, col_res2, col_res3 = st.columns(3)
@@ -766,7 +787,7 @@ else:
     - **Soma por Produto:** Visualize a quantidade total movimentada por produto com filtros interativos
     - **Filtros Dinâmicos:** Filtre por POP, Tipo de OS, Técnico e período (todos preselecionados)
     - **Movimentações Agrupadas:** Foco principal no produto, com filtros complementares (todos preselecionados)
-    - **Tabelas Dinâmicas:** Visualize TODOS os produtos vs Técnicos e TODOS os produtos vs POP (sem limitação)
+    - **Tabelas Dinâmicas:** Visualize TODOS os produtos vs Técnicos e TODOS os produtos vs POP (com scroll horizontal)
     - **Previsão de Ressuprimento:** Análise automática baseada nos técnicos filtrados, considerando os últimos 90 dias
     - **Exportação de Dados:** Exporte todas as análises para Excel
     """)
