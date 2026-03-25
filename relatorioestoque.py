@@ -12,6 +12,12 @@ st.set_page_config(
     layout="wide"
 )
 
+# Configurar pandas para mostrar todas as colunas
+pd.set_option('display.max_columns', None)
+pd.set_option('display.max_rows', None)
+pd.set_option('display.width', None)
+pd.set_option('display.max_colwidth', None)
+
 st.title("📊 Sistema de Gestão de Estoque e Movimentações")
 st.markdown("---")
 
@@ -255,113 +261,91 @@ if uploaded_estoque is not None and uploaded_movimentacao is not None:
             
             # ==================== TABELAS DINÂMICAS ====================
             st.subheader("📊 Tabelas Dinâmicas")
-            st.info("💡 **Dica:** Utilize os filtros acima para reduzir a quantidade de dados e melhorar a visualização")
             
             tab_pivot1, tab_pivot2 = st.tabs(["📊 Produtos vs Técnicos", "📊 Produtos vs POP"])
             
             with tab_pivot1:
                 st.write("**Matriz: Produtos vs Técnicos**")
                 
-                # Filtros para a tabela dinâmica
-                col_pivot1, col_pivot2 = st.columns(2)
-                with col_pivot1:
-                    tecnicos_para_pivot = st.multiselect(
-                        "Selecione os técnicos para visualizar na matriz",
-                        options=sorted(df_grouped['Tecnico_Fechamento'].unique()),
-                        default=sorted(df_grouped['Tecnico_Fechamento'].unique())[:15] if len(df_grouped['Tecnico_Fechamento'].unique()) > 15 else sorted(df_grouped['Tecnico_Fechamento'].unique()),
-                        key="tecnicos_pivot"
-                    )
+                # Criar pivot completa
+                pivot_tecnicos = pd.pivot_table(
+                    df_grouped,
+                    values='Quantidade',
+                    index='Produto',
+                    columns='Tecnico_Fechamento',
+                    aggfunc='sum',
+                    fill_value=0
+                )
                 
-                with col_pivot2:
-                    top_produtos_pivot = st.number_input(
-                        "Número de produtos a exibir (ordenados por quantidade)",
-                        min_value=5,
-                        max_value=len(df_grouped['Produto'].unique()),
-                        value=min(20, len(df_grouped['Produto'].unique())),
-                        key="top_produtos_pivot"
-                    )
+                # Ordenar por quantidade total
+                produto_total = df_grouped.groupby('Produto')['Quantidade'].sum()
+                pivot_tecnicos = pivot_tecnicos.reindex(produto_total.sort_values(ascending=False).index)
                 
-                if tecnicos_para_pivot:
-                    df_pivot_filtered = df_grouped[df_grouped['Tecnico_Fechamento'].isin(tecnicos_para_pivot)]
-                    
-                    # Criar pivot
-                    pivot_tecnicos = pd.pivot_table(
-                        df_pivot_filtered,
-                        values='Quantidade',
-                        index='Produto',
-                        columns='Tecnico_Fechamento',
-                        aggfunc='sum',
-                        fill_value=0
-                    )
-                    
-                    # Selecionar top produtos
-                    produto_total = df_pivot_filtered.groupby('Produto')['Quantidade'].sum()
-                    top_produtos = produto_total.nlargest(top_produtos_pivot).index
-                    pivot_tecnicos = pivot_tecnicos.loc[top_produtos]
-                    
-                    st.dataframe(pivot_tecnicos, use_container_width=True, height=500)
-                    
-                    col_r1, col_r2, col_r3 = st.columns(3)
-                    with col_r1:
-                        st.metric("Produtos Exibidos", len(pivot_tecnicos))
-                    with col_r2:
-                        st.metric("Técnicos Exibidos", len(pivot_tecnicos.columns))
-                    with col_r3:
-                        st.metric("Quantidade Total", f"{pivot_tecnicos.sum().sum():,.0f}")
-                else:
-                    st.warning("Selecione pelo menos um técnico para visualizar a matriz")
+                # Exibir todas as colunas sem limitação usando HTML customizado
+                st.markdown("""
+                <style>
+                .dataframe-container {
+                    overflow-x: auto;
+                    max-width: 100%;
+                }
+                .dataframe {
+                    width: 100%;
+                    border-collapse: collapse;
+                }
+                .dataframe th, .dataframe td {
+                    padding: 8px;
+                    text-align: left;
+                    border: 1px solid #ddd;
+                    white-space: nowrap;
+                }
+                .dataframe th {
+                    background-color: #f2f2f2;
+                    position: sticky;
+                    top: 0;
+                }
+                </style>
+                """, unsafe_allow_html=True)
+                
+                # Converter para HTML com scroll horizontal
+                html_table = pivot_tecnicos.to_html(classes='dataframe', max_cols=None)
+                st.markdown(f'<div class="dataframe-container">{html_table}</div>', unsafe_allow_html=True)
+                
+                col_r1, col_r2, col_r3 = st.columns(3)
+                with col_r1:
+                    st.metric("Total de Produtos", len(pivot_tecnicos))
+                with col_r2:
+                    st.metric("Total de Técnicos", len(pivot_tecnicos.columns))
+                with col_r3:
+                    st.metric("Quantidade Total", f"{pivot_tecnicos.sum().sum():,.0f}")
             
             with tab_pivot2:
                 st.write("**Matriz: Produtos vs POP**")
                 
-                # Filtros para a tabela dinâmica
-                col_pivot3, col_pivot4 = st.columns(2)
-                with col_pivot3:
-                    pops_para_pivot = st.multiselect(
-                        "Selecione os POPs para visualizar na matriz",
-                        options=sorted(df_grouped['POP'].unique()),
-                        default=sorted(df_grouped['POP'].unique())[:15] if len(df_grouped['POP'].unique()) > 15 else sorted(df_grouped['POP'].unique()),
-                        key="pops_pivot"
-                    )
+                # Criar pivot completa
+                pivot_pop = pd.pivot_table(
+                    df_grouped,
+                    values='Quantidade',
+                    index='Produto',
+                    columns='POP',
+                    aggfunc='sum',
+                    fill_value=0
+                )
                 
-                with col_pivot4:
-                    top_produtos_pivot_pop = st.number_input(
-                        "Número de produtos a exibir (ordenados por quantidade)",
-                        min_value=5,
-                        max_value=len(df_grouped['Produto'].unique()),
-                        value=min(20, len(df_grouped['Produto'].unique())),
-                        key="top_produtos_pivot_pop"
-                    )
+                # Ordenar por quantidade total
+                produto_total_pop = df_grouped.groupby('Produto')['Quantidade'].sum()
+                pivot_pop = pivot_pop.reindex(produto_total_pop.sort_values(ascending=False).index)
                 
-                if pops_para_pivot:
-                    df_pivot_filtered_pop = df_grouped[df_grouped['POP'].isin(pops_para_pivot)]
-                    
-                    # Criar pivot
-                    pivot_pop = pd.pivot_table(
-                        df_pivot_filtered_pop,
-                        values='Quantidade',
-                        index='Produto',
-                        columns='POP',
-                        aggfunc='sum',
-                        fill_value=0
-                    )
-                    
-                    # Selecionar top produtos
-                    produto_total_pop = df_pivot_filtered_pop.groupby('Produto')['Quantidade'].sum()
-                    top_produtos_pop = produto_total_pop.nlargest(top_produtos_pivot_pop).index
-                    pivot_pop = pivot_pop.loc[top_produtos_pop]
-                    
-                    st.dataframe(pivot_pop, use_container_width=True, height=500)
-                    
-                    col_r1, col_r2, col_r3 = st.columns(3)
-                    with col_r1:
-                        st.metric("Produtos Exibidos", len(pivot_pop))
-                    with col_r2:
-                        st.metric("POPs Exibidos", len(pivot_pop.columns))
-                    with col_r3:
-                        st.metric("Quantidade Total", f"{pivot_pop.sum().sum():,.0f}")
-                else:
-                    st.warning("Selecione pelo menos um POP para visualizar a matriz")
+                # Exibir todas as colunas sem limitação usando HTML customizado
+                html_table_pop = pivot_pop.to_html(classes='dataframe', max_cols=None)
+                st.markdown(f'<div class="dataframe-container">{html_table_pop}</div>', unsafe_allow_html=True)
+                
+                col_r1, col_r2, col_r3 = st.columns(3)
+                with col_r1:
+                    st.metric("Total de Produtos", len(pivot_pop))
+                with col_r2:
+                    st.metric("Total de POPs", len(pivot_pop.columns))
+                with col_r3:
+                    st.metric("Quantidade Total", f"{pivot_pop.sum().sum():,.0f}")
         
         else:
             st.warning("Nenhum dado encontrado com os filtros selecionados.")
@@ -474,7 +458,7 @@ else:
     - **Relatório Completo:** Visualize todas as movimentações com abas por visão geral, produto, técnico e POP
     - **Soma por Produto:** Quantidade total movimentada por produto
     - **Filtros Dinâmicos:** Filtre por POP, Tipo de OS, Técnico e período (todos preselecionados)
-    - **Tabelas Dinâmicas:** Selecione quais técnicos/POPs visualizar para evitar limitação de colunas
+    - **Tabelas Dinâmicas:** Visualize todas as colunas sem limitação usando HTML com scroll horizontal
     - **Previsão de Ressuprimento:** Análise baseada nos últimos 90 dias
     - **Exportação de Dados:** Exporte todas as análises para Excel
     """)
